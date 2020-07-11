@@ -15,7 +15,8 @@ import copy
 import six
 import datetime as dt
 import pandas as pd
-import plotly.plotly as py
+#import plotly.plotly as py
+import chart_studio.plotly as py
 import plotly.offline as pyo
 
 from . import tools

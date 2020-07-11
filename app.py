@@ -4,7 +4,8 @@ import os
 import datetime as dt
 
 import quantmod as qm
-import pandas_datareader.data as web
+import pandas as pd
+#import pandas_datareader.data as web
 
 import flask
 import dash
@@ -31,67 +32,20 @@ cache = Cache(app.server, config={'CACHE_TYPE': 'simple'})
 timeout = 60 * 60  # 1 hour
 
 # Controls
-sp500 = ['AAPL', 'ABT', 'ABBV', 'ACN', 'ACE', 'ADBE', 'ADT', 'AAP', 'AES',
-         'AET', 'AFL', 'AMG', 'A', 'GAS', 'ARE', 'APD', 'AKAM', 'AA', 'AGN',
-         'ALXN', 'ALLE', 'ADS', 'ALL', 'ALTR', 'MO', 'AMZN', 'AEE', 'AAL',
-         'AEP', 'AXP', 'AIG', 'AMT', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'APC',
-         'ADI', 'AON', 'APA', 'AIV', 'AMAT', 'ADM', 'AIZ', 'T', 'ADSK', 'ADP',
-         'AN', 'AZO', 'AVGO', 'AVB', 'AVY', 'BHI', 'BLL', 'BAC', 'BK', 'BCR',
-         'BXLT', 'BAX', 'BBT', 'BDX', 'BBBY', 'BRK.B', 'BBY', 'BLX', 'HRB',
-         'BA', 'BWA', 'BXP', 'BSX', 'BMY', 'BRCM', 'BF.B', 'CHRW', 'CA',
-         'CVC', 'COG', 'CAM', 'CPB', 'COF', 'CAH', 'HSIC', 'KMX', 'CCL',
-         'CAT', 'CBG', 'CBS', 'CELG', 'CNP', 'CTL', 'CERN', 'CF', 'SCHW',
-         'CHK', 'CVX', 'CMG', 'CB', 'CI', 'XEC', 'CINF', 'CTAS', 'CSCO', 'C',
-         'CTXS', 'CLX', 'CME', 'CMS', 'COH', 'KO', 'CCE', 'CTSH', 'CL',
-         'CMCSA', 'CMA', 'CSC', 'CAG', 'COP', 'CNX', 'ED', 'STZ', 'GLW',
-         'COST', 'CCI', 'CSX', 'CMI', 'CVS', 'DHI', 'DHR', 'DRI', 'DVA',
-         'DE', 'DLPH', 'DAL', 'XRAY', 'DVN', 'DO', 'DTV', 'DFS', 'DISCA',
-         'DISCK', 'DG', 'DLTR', 'D', 'DOV', 'DOW', 'DPS', 'DTE', 'DD', 'DUK',
-         'DNB', 'ETFC', 'EMN', 'ETN', 'EBAY', 'ECL', 'EIX', 'EW', 'EA',
-         'EMC', 'EMR', 'ENDP', 'ESV', 'ETR', 'EOG', 'EQT', 'EFX', 'EQIX',
-         'EQR', 'ESS', 'EL', 'ES', 'EXC', 'EXPE', 'EXPD', 'ESRX', 'XOM',
-         'FFIV', 'FB', 'FAST', 'FDX', 'FIS', 'FITB', 'FSLR', 'FE', 'FISV',
-         'FLIR', 'FLS', 'FLR', 'FMC', 'FTI', 'F', 'FOSL', 'BEN', 'FCX',
-         'FTR', 'GME', 'GPS', 'GRMN', 'GD', 'GE', 'GGP', 'GIS', 'GM',
-         'GPC', 'GNW', 'GILD', 'GS', 'GT', 'GOOGL', 'GOOG', 'GWW', 'HAL',
-         'HBI', 'HOG', 'HAR', 'HRS', 'HIG', 'HAS', 'HCA', 'HCP', 'HCN',
-         'HP', 'HES', 'HPQ', 'HD', 'HON', 'HRL', 'HSP', 'HST', 'HCBK',
-         'HUM', 'HBAN', 'ITW', 'IR', 'INTC', 'ICE', 'IBM', 'IP', 'IPG',
-         'IFF', 'INTU', 'ISRG', 'IVZ', 'IRM', 'JEC', 'JBHT', 'JNJ',
-         'JCI', 'JOY', 'JPM', 'JNPR', 'KSU', 'K', 'KEY', 'GMCR', 'KMB',
-         'KIM', 'KMI', 'KLAC', 'KSS', 'KRFT', 'KR', 'LB', 'LLL', 'LH',
-         'LRCX', 'LM', 'LEG', 'LEN', 'LVLT', 'LUK', 'LLY', 'LNC', 'LLTC',
-         'LMT', 'L', 'LOW', 'LYB', 'MTB', 'MAC', 'M', 'MNK', 'MRO', 'MPC',
-         'MAR', 'MMC', 'MLM', 'MAS', 'MA', 'MAT', 'MKC', 'MCD', 'MCK',
-         'MJN', 'MMV', 'MDT', 'MRK', 'MET', 'KORS', 'MCHP', 'MU', 'MSFT',
-         'MHK', 'TAP', 'MDLZ', 'MON', 'MNST', 'MCO', 'MS', 'MOS', 'MSI',
-         'MUR', 'MYL', 'NDAQ', 'NOV', 'NAVI', 'NTAP', 'NFLX', 'NWL',
-         'NFX', 'NEM', 'NWSA', 'NEE', 'NLSN', 'NKE', 'NI', 'NE', 'NBL',
-         'JWN', 'NSC', 'NTRS', 'NOC', 'NRG', 'NUE', 'NVDA', 'ORLY',
-         'OXY', 'OMC', 'OKE', 'ORCL', 'OI', 'PCAR', 'PLL', 'PH', 'PDCO',
-         'PAYX', 'PNR', 'PBCT', 'POM', 'PEP', 'PKI', 'PRGO', 'PFE',
-         'PCG', 'PM', 'PSX', 'PNW', 'PXD', 'PBI', 'PCL', 'PNC', 'RL',
-         'PPG', 'PPL', 'PX', 'PCP', 'PCLN', 'PFG', 'PG', 'PGR', 'PLD',
-         'PRU', 'PEG', 'PSA', 'PHM', 'PVH', 'QRVO', 'PWR', 'QCOM',
-         'DGX', 'RRC', 'RTN', 'O', 'RHT', 'REGN', 'RF', 'RSG', 'RAI',
-         'RHI', 'ROK', 'COL', 'ROP', 'ROST', 'RLD', 'R', 'CRM', 'SNDK',
-         'SCG', 'SLB', 'SNI', 'STX', 'SEE', 'SRE', 'SHW', 'SPG', 'SWKS',
-         'SLG', 'SJM', 'SNA', 'SO', 'LUV', 'SWN', 'SE', 'STJ', 'SWK',
-         'SPLS', 'SBUX', 'HOT', 'STT', 'SRCL', 'SYK', 'STI', 'SYMC', 'SYY',
-         'TROW', 'TGT', 'TEL', 'TE', 'TGNA', 'THC', 'TDC', 'TSO', 'TXN',
-         'TXT', 'HSY', 'TRV', 'TMO', 'TIF', 'TWX', 'TWC', 'TJX', 'TMK',
-         'TSS', 'TSCO', 'RIG', 'TRIP', 'FOXA', 'TSN', 'TYC', 'UA',
-         'UNP', 'UNH', 'UPS', 'URI', 'UTX', 'UHS', 'UNM', 'URBN', 'VFC',
-         'VLO', 'VAR', 'VTR', 'VRSN', 'VZ', 'VRTX', 'VIAB', 'V', 'VNO',
-         'VMC', 'WMT', 'WBA', 'DIS', 'WM', 'WAT', 'ANTM', 'WFC', 'WDC',
-         'WU', 'WY', 'WHR', 'WFM', 'WMB', 'WEC', 'WYN', 'WYNN', 'XEL',
-         'XRX', 'XLNX', 'XL', 'XYL', 'YHOO', 'YUM', 'ZBH', 'ZION', 'ZTS']
+nifty100 = ["ACC", "ADANIPORTS", "ADANITRANS", "AMBUJACEM", "ASHOKLEY", "ASIANPAINT", "AUROPHARMA", "DMART", "AXISBANK", "BAJAJ-AUTO", "BAJFINANCE", "BAJAJFINSV", "BAJAJHLDNG", "BANDHANBNK", "BANKBARODA", "BERGEPAINT", "BPCL", "BHARTIARTL", "INFRATEL", "BIOCON", "BOSCHLTD", "BRITANNIA", "CADILAHC", "CIPLA", "COALINDIA", "COLPAL", "CONCOR", "DLF", "DABUR", "DIVISLAB", "DRREDDY", "EICHERMOT", "GAIL", "GICRE", "GODREJCP", "GRASIM", "HCLTECH", "HDFCAMC", "HDFCBANK", "HDFCLIFE", "HAVELLS", "HEROMOTOCO", "HINDALCO", "HINDPETRO", "HINDUNILVR", "HINDZINC", "HDFC", "ICICIBANK", "ICICIGI", "ICICIPRULI", "ITC", "IBULHSGFIN", "IOC", "INDUSINDBK", "INFY", "INDIGO", "JSWSTEEL", "KOTAKBANK", "L&TFH", "LT", "LUPIN", "M&M", "MARICO", "MARUTI", "MOTHERSUMI", "NHPC", "NMDC", "NTPC", "NESTLEIND", "ONGC", "OFSS", "PAGEIND", "PETRONET", "PIDILITIND", "PEL", "PFC", "POWERGRID", "PGHH", "PNB", "RELIANCE", "SBILIFE", "SHREECEM", "SRTRANSFIN", "SIEMENS", "SBIN", "SUNPHARMA", "TCS", "TATAMTRDVR", "TATAMOTORS", "TATASTEEL", "TECHM", "NIACL", "TITAN", "UPL", "ULTRACEMCO", "UBL", "MCDOWELL-N", "VEDL", "IDEA", "WIPRO", "ZEEL"]
 
-etf = ['SPY', 'XLF', 'GDX', 'EEM', 'VXX', 'IWM', 'UVXY', 'UXO', 'GDXJ', 'QQQ']
+index = ["NIFTY 50", "NIFTY NEXT 50", "NIFTY 100", "NIFTY ALPHA LOW-VOLATILITY 30", "NIFTY ALPHA QUALITY LOW-VOLATILITY 30"]
 
-tickers = sp500 + etf
+tickers = nifty100 + index
 tickers = [dict(label=str(ticker), value=str(ticker))
            for ticker in tickers]
+
+def get_data(symbol='NIFTY 100', start_date=dt.datetime(2015,1,1), end_date = dt.datetime.now()):
+    filename = '/Users/sbathe/repos/nsepy-copy/data/' + symbol + '.csv'
+    df = pd.read_csv(filename,index_col=0)
+    df.index = pd.to_datetime(df.index)
+    return df
+
 
 # Dynamic binding
 functions = dir(qm.ta)[9:-4]
@@ -112,7 +66,7 @@ app.layout = html.Div(
                     dcc.Dropdown(
                         id='dropdown',
                         options=tickers,
-                        value='SPY',
+                        value='NIFTY 100',
                     ),
                 ],
                 style={
@@ -126,7 +80,8 @@ app.layout = html.Div(
                         id='multi',
                         options=functions,
                         multi=True,
-                        value=['add_BBANDS', 'add_RSI', 'add_MACD'],
+                        #value=['add_BBANDS', 'add_RSI', 'add_MACD'],
+                        value=[],
                     ),
                 ],
                 style={
@@ -173,7 +128,10 @@ def update_graph_from_dropdown(dropdown, multi, arglist):
 
     # Get Quantmod Chart
     try:
-        df = web.DataReader(dropdown, 'google', dt.datetime(2016, 1, 1), dt.datetime.now())
+        #df = web.DataReader(dropdown, 'google', dt.datetime(2016, 1, 1), dt.datetime.now())
+        df = get_data(symbol=dropdown,
+                      start_date=dt.datetime(2016, 1,1),
+                      end_date = dt.datetime.now())
         print('Loading')
         ch = qm.Chart(df)
     except:
@@ -214,8 +172,9 @@ def update_graph_from_dropdown(dropdown, multi, arglist):
 # In[]:
 # External css
 
-external_css = ["https://fonts.googleapis.com/css?family=Overpass:400,400i,700,700i",
-                "https://cdn.rawgit.com/plotly/dash-app-stylesheets/c6a126a684eaaa94a708d41d6ceb32b28ac78583/dash-technical-charting.css"]
+#external_css = ["https://fonts.googleapis.com/css?family=Overpass:400,400i,700,700i",
+#                "https://cdn.rawgit.com/plotly/dash-app-stylesheets/c6a126a684eaaa94a708d41d6ceb32b28ac78583/dash-technical-charting.css"]
+external_css = ["https://fonts.googleapis.com/css?family=Overpass:400,400i,700,700i"]
 
 for css in external_css:
     app.css.append_css({"external_url": css})
